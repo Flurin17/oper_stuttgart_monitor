@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Stuttgart ticket monitor local state and secrets
+*.sqlite3-shm
+*.sqlite3-wal
+data/
+config.yaml
+oper-monitor.env

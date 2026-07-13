@@ -1,0 +1,32 @@
+[Unit]
+Description=Stuttgart Eventim ticket monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=oper-monitor
+Group=oper-monitor
+WorkingDirectory=/opt/oper-monitor
+EnvironmentFile=/etc/oper-monitor/oper-monitor.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/oper-monitor/.venv/bin/oper-monitor --config /etc/oper-monitor/config.yaml
+Restart=on-failure
+RestartSec=10s
+StateDirectory=oper-monitor
+UMask=0077
+
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target
