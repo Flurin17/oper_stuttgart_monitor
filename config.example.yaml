@@ -1,0 +1,35 @@
+poll_interval_seconds: 60
+failure_alert_after: 3
+request_timeout_seconds: 20
+state_path: ./data/oper-monitor.sqlite3
+
+# These defaults describe the Staatstheater Stuttgart Eventim installation.
+# Override them only if the shop changes its connector configuration.
+provider:
+  api_base_url: https://public-api.eventim.com/seatmap/api/public
+  connector_type: inhouserest
+  connector_id: "1780"
+  client_id: "001"
+  cashier: web
+  venue_id: 1
+  servlet_url: https://ticket.staatstheater-stuttgart.de/eventim.webshop/
+  origin: webshop
+  api_version: 6.18.2
+
+events:
+  - key: event-17304
+    label: Performance 17304
+    url: https://ticket.staatstheater-stuttgart.de/eventim.webshop/webticket/seatmap?eventId=17304
+
+rules:
+  - key: adjacent-pair
+    events: [event-17304]
+    minimum_adjacent: 2
+    # Standard price groups only. Group 18 is the wheelchair-only "Rolli" group.
+    include_price_groups: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    exclude_price_groups: [18]
+    # Optional filters; block patterns use shell-style globs and rows are exact strings.
+    include_blocks: []
+    exclude_blocks: []
+    include_rows: []
+    exclude_rows: []
