@@ -104,6 +104,27 @@ uv run pytest
 
 The GitHub Actions workflow runs the same suite on every push and pull request.
 
+## Related production implementations
+
+This repository is the open-source, Eventim-specific reference implementation.
+I also operate the following independent ticket-availability monitors. They use
+the same fail-closed principle—provider errors remain unknown rather than being
+reported as sold out—but each has a separate provider adapter and inventory
+model:
+
+- [Studio Ticket Watch](https://studioticketwatch.com/availability) for Warner
+  Bros. Studio Tour London;
+- [Crown Watch NYC](https://crownwatchnyc.com/availability) for Statue of
+  Liberty Crown Reserve;
+- [Granada Slot](https://granadaslot.com/en/blog/alhambra-tickets-sold-out-what-to-do)
+  for Alhambra General and Nasrid Palaces availability; and
+- [Amsterdam Museum Slot](https://amsterdammuseumslot.com/blog/tickets-sold-out)
+  for Anne Frank House timeslots.
+
+These services are not affiliated with the attractions or their ticketing
+providers. They do not sell, reserve, hold, or buy admission; official checkout
+remains the source of truth.
+
 ## Security and responsible use
 
 Never commit a Discord webhook: provide it only through `DISCORD_WEBHOOK_URL`. Local configuration, environment files, SQLite state, and virtual environments are ignored by Git. See [SECURITY.md](SECURITY.md) for private vulnerability reporting guidance.
