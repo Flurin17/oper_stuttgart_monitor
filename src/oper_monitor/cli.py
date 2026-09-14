@@ -36,7 +36,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         config = load_config(Path(args.config))
         if args.check_config:
-            print(f"Configuration valid: {len(config.events)} event(s), {len(config.rules)} rule(s)")
+            scope = "all programme events (automatic discovery)" if config.discover_all_events else f"{len(config.events)} event(s)"
+            print(f"Configuration valid: {scope}, {len(config.rules)} rule(s)")
             return 0
 
         webhook = os.environ.get("DISCORD_WEBHOOK_URL", "").strip()

@@ -35,11 +35,26 @@ uv run oper-monitor --config config.yaml
 
 ## Configuration
 
-`config.example.yaml` contains event `17304` and the initial rule: at least two adjacent seats in standard price groups 1–9. Wheelchair-only group 18 (`Rolli`) is excluded.
+`config.example.yaml` enables automatic discovery of all future ticketed performances listed in the Staatsoper Stuttgart programme, across every published season month. The programme is refreshed hourly, so newly listed performances are included automatically. Each performance retains independent alert state. Discovery failures retain the previous list and count toward the operational failure alert.
+
+```yaml
+discover_all_events: true
+events: []
+rules:
+  - key: adjacent-pair
+    events: ["*"]
+    minimum_adjacent: 2
+    include_price_groups: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    exclude_price_groups: [18]
+```
+
+Discovery follows public ticket links, including remaining-ticket links. Entries without a public Eventim event ID (including some sold-out performances), free events, and performances outside the Staatsoper calendar cannot be discovered. Adjacent-seat matching requires a supported assigned-seat map; general-admission events cannot produce an adjacent-seat match. All-event polling runs sequentially with a one-second pause between performances, followed by the configured interval after each complete cycle.
+
+Set `discover_all_events: false` and supply explicit `events` to monitor a fixed list. Explicit entries can also supplement discovery; an explicit entry takes precedence for the same Eventim ID. The initial rule remains at least two adjacent seats in standard price groups 1–9, excluding wheelchair-only group 18 (`Rolli`).
 
 Each rule supports:
 
-- `events`: event keys to which the rule applies.
+- `events`: event keys to which the rule applies, or `["*"]` for all events, including future discoveries. With discovery enabled, omitted rule events default to all events.
 - `minimum_adjacent`: required run length; `1` also supports single-seat alerts.
 - `include_price_groups` and `exclude_price_groups`: Eventim numeric price-group IDs.
 - `include_blocks` and `exclude_blocks`: case-insensitive shell-style globs, such as `Parkett*`.

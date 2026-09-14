@@ -106,3 +106,35 @@ def test_failure_threshold_and_recovery() -> None:
     assert monitor.run_once().successful
     assert notifier.payloads[-1]["content"].endswith("recovered")
     state.close()
+
+
+def test_discovery_refresh_failure_keeps_checking_and_recovers(monkeypatch):
+    from oper_monitor import monitor as module
+    clock = [0.0]
+    monkeypatch.setattr(module.time, 'monotonic', lambda: clock[0])
+    first = EventConfig('one', 'https://example.test/?eventId=1', 'One', 1)
+    second = EventConfig('two', 'https://example.test/?eventId=2', 'Two', 2)
+    discoveries = [(first,), RuntimeError('offline'), (first, second)]
+    calls = []
+
+    def discover(timeout):
+        calls.append(timeout)
+        result = discoveries.pop(0)
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+    monkeypatch.setattr(module, 'discover_events', discover)
+    monitor, state, notifier = make_monitor([snapshot(1, 2)] * 5)
+    monitor.config = replace(monitor.config, events=(), discover_all_events=True,
+                             rules=(RuleConfig('pair', ('*',)),))
+    monkeypatch.setattr(monitor, '_load_context', lambda event: context())
+    assert monitor.run_once().checked_events == 1
+    assert monitor.run_once().checked_events == 1
+    assert len(calls) == 1
+    clock[0] = 3601
+    failed = monitor.run_once()
+    assert failed.checked_events == 1 and not failed.successful
+    assert monitor.run_once().checked_events == 2
+    assert len(notifier.payloads) == 2  # Independent event state; no duplicate first alert.
+    state.close()

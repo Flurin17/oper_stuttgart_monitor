@@ -55,9 +55,11 @@ class AppConfig:
     provider: ProviderConfig
     events: tuple[EventConfig, ...]
     rules: tuple[RuleConfig, ...]
+    discover_all_events: bool = False
 
 
 _ROOT_KEYS = {
+    "discover_all_events",
     "poll_interval_seconds",
     "failure_alert_after",
     "state_path",
@@ -171,8 +173,11 @@ def load_config(path: str | Path) -> AppConfig:
     if provider.venue_id <= 0:
         raise ConfigError("provider.venue_id must be positive")
 
-    event_items = data.get("events")
-    if not isinstance(event_items, list) or not event_items:
+    discover_all = data.get("discover_all_events", False)
+    if not isinstance(discover_all, bool):
+        raise ConfigError("discover_all_events must be a boolean")
+    event_items = data.get("events", [])
+    if not isinstance(event_items, list) or (not event_items and not discover_all):
         raise ConfigError("events must be a non-empty list")
     events: list[EventConfig] = []
     event_keys: set[str] = set()
@@ -199,10 +204,10 @@ def load_config(path: str | Path) -> AppConfig:
         if key in rule_keys:
             raise ConfigError(f"Duplicate rule key: {key}")
         rule_keys.add(key)
-        selected_events = _string_tuple(rule_data.get("events", list(event_keys)), f"rules[{index}].events")
+        selected_events = _string_tuple(rule_data.get("events", ["*"] if discover_all else list(event_keys)), f"rules[{index}].events")
         if not selected_events:
             raise ConfigError(f"rules[{index}].events cannot be empty")
-        unknown_events = sorted(set(selected_events) - event_keys)
+        unknown_events = sorted(set(selected_events) - event_keys - {"*"})
         if unknown_events:
             raise ConfigError(f"Rule {key} references unknown event(s): {', '.join(unknown_events)}")
         minimum_adjacent = rule_data.get("minimum_adjacent", 2)
@@ -235,4 +240,5 @@ def load_config(path: str | Path) -> AppConfig:
         provider=provider,
         events=tuple(events),
         rules=tuple(rules),
+        discover_all_events=discover_all,
     )

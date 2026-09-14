@@ -6,6 +6,7 @@ import logging
 import random
 import signal
 import threading
+import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -17,6 +18,7 @@ from .discord import (
     build_match_payload,
     build_recovery_payload,
 )
+from .discovery import discover_events
 from .eventim import EventimClient, EventimError, decode_block_infos, decode_mapping, decode_seatmap
 from .models import EventContext
 from .rules import evaluate_rule
@@ -44,6 +46,8 @@ class TicketMonitor:
         self.notifier = notifier
         self.contexts: dict[str, EventContext] = {}
         self._stop = threading.Event()
+        self._discovered_events: tuple[EventConfig, ...] = ()
+        self._last_discovery: float | None = None
 
     def install_signal_handlers(self) -> None:
         def stop(signum: int, _frame: Any) -> None:
@@ -117,7 +121,7 @@ class TicketMonitor:
             len(availability.available_seat_ids),
         )
         for rule in self.config.rules:
-            if event.key not in rule.events:
+            if "*" not in rule.events and event.key not in rule.events:
                 continue
             result = evaluate_rule(rule, context, availability)
             LOG.info(
@@ -141,7 +145,25 @@ class TicketMonitor:
     def run_once(self) -> CycleSummary:
         errors: list[str] = []
         checked = 0
-        for event in self.config.events:
+        if self.config.discover_all_events and (
+            self._last_discovery is None or time.monotonic() - self._last_discovery >= 3600
+        ):
+            try:
+                self._discovered_events = discover_events(self.config.request_timeout_seconds)
+                self._last_discovery = time.monotonic()
+                LOG.info("Discovered %d future ticketed performances", len(self._discovered_events))
+            except Exception as exc:
+                LOG.exception("Programme discovery failed")
+                errors.append(f"programme discovery: {exc}")
+        events = {event.event_id: event for event in self._discovered_events}
+        events.update({event.event_id: event for event in self.config.events})
+        active_keys = {event.key for event in events.values()}
+        self.contexts = {key: value for key, value in self.contexts.items() if key in active_keys}
+        for index, event in enumerate(events.values()):
+            if index and self.config.discover_all_events:
+                self._stop.wait(1.0)
+            if self._stop.is_set():
+                break
             try:
                 self._process_event(event)
                 checked += 1

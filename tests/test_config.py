@@ -64,3 +64,19 @@ def test_rejects_overlapping_price_groups(tmp_path: Path) -> None:
 def test_rejects_too_fast_polling(tmp_path: Path) -> None:
     with pytest.raises(ConfigError, match="at least 30"):
         load_config(write(tmp_path, "poll_interval_seconds: 10\n" + VALID))
+
+
+def test_discovery_without_manual_events(tmp_path):
+    cfg = load_config(write(tmp_path, 'discover_all_events: true\nrules:\n  - key: pair\n'))
+    assert cfg.events == ()
+    assert cfg.rules[0].events == ('*',)
+
+
+def test_wildcard_rule(tmp_path):
+    cfg = load_config(write(tmp_path, VALID.replace('events: [first]', 'events: ["*"]')))
+    assert cfg.rules[0].events == ('*',)
+
+
+def test_discovery_requires_boolean(tmp_path):
+    with pytest.raises(ConfigError, match='must be a boolean'):
+        load_config(write(tmp_path, 'discover_all_events: all\n' + VALID))
