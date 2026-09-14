@@ -56,10 +56,12 @@ class AppConfig:
     events: tuple[EventConfig, ...]
     rules: tuple[RuleConfig, ...]
     discover_all_events: bool = False
+    discovery_title: str | None = None
 
 
 _ROOT_KEYS = {
     "discover_all_events",
+    "discovery_title",
     "poll_interval_seconds",
     "failure_alert_after",
     "state_path",
@@ -176,6 +178,11 @@ def load_config(path: str | Path) -> AppConfig:
     discover_all = data.get("discover_all_events", False)
     if not isinstance(discover_all, bool):
         raise ConfigError("discover_all_events must be a boolean")
+    discovery_title = data.get("discovery_title")
+    if discovery_title is not None:
+        discovery_title = _nonempty_string(discovery_title, "discovery_title")
+        if not discover_all:
+            raise ConfigError("discovery_title requires discover_all_events: true")
     event_items = data.get("events", [])
     if not isinstance(event_items, list) or (not event_items and not discover_all):
         raise ConfigError("events must be a non-empty list")
@@ -241,4 +248,5 @@ def load_config(path: str | Path) -> AppConfig:
         events=tuple(events),
         rules=tuple(rules),
         discover_all_events=discover_all,
+        discovery_title=discovery_title,
     )

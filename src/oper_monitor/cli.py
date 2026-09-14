@@ -37,6 +37,8 @@ def main(argv: list[str] | None = None) -> int:
         config = load_config(Path(args.config))
         if args.check_config:
             scope = "all programme events (automatic discovery)" if config.discover_all_events else f"{len(config.events)} event(s)"
+            if config.discovery_title:
+                scope = f"all performances of {config.discovery_title!r}"
             print(f"Configuration valid: {scope}, {len(config.rules)} rule(s)")
             return 0
 

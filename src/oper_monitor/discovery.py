@@ -77,7 +77,7 @@ class ProgrammeParser(HTMLParser):
             self.title.append(data)
 
 
-def discover_events(timeout: float = 20) -> tuple[EventConfig, ...]:
+def discover_events(timeout: float = 20, title: str | None = None) -> tuple[EventConfig, ...]:
     def read(url):
         response = session.get(url, timeout=(5, timeout))
         response.raise_for_status()
@@ -100,4 +100,8 @@ def discover_events(timeout: float = 20) -> tuple[EventConfig, ...]:
         raise DiscoveryError(f"Programme discovery failed: {exc}") from exc
     if not events:
         raise DiscoveryError("No future ticketed performances found; retaining previous events")
-    return tuple(events[key] for key in sorted(events))
+    selected = tuple(events[key] for key in sorted(events) if title is None or
+                     events[key].label.rsplit(" — ", 1)[0].casefold() == title.casefold())
+    if not selected:
+        raise DiscoveryError(f"No future ticketed performances found for {title!r}")
+    return selected

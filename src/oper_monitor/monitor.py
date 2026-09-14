@@ -149,7 +149,7 @@ class TicketMonitor:
             self._last_discovery is None or time.monotonic() - self._last_discovery >= 3600
         ):
             try:
-                self._discovered_events = discover_events(self.config.request_timeout_seconds)
+                self._discovered_events = discover_events(self.config.request_timeout_seconds, self.config.discovery_title)
                 self._last_discovery = time.monotonic()
                 LOG.info("Discovered %d future ticketed performances", len(self._discovered_events))
             except Exception as exc:

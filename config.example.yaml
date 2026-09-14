@@ -17,6 +17,7 @@ provider:
   api_version: 6.18.2
 
 discover_all_events: true
+discovery_title: "Die drei ??? und das Spiegelkabinett"
 events: []
 
 rules:

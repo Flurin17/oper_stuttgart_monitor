@@ -41,3 +41,16 @@ def test_empty_discovery_is_an_error():
     responses.get(PROGRAMME_URL, body='<html>Unavailable</html>')
     with pytest.raises(DiscoveryError):
         discover_events()
+
+
+@responses.activate
+def test_exact_title_filter_excludes_matinee_and_other_productions():
+    title = 'Die drei ??? und das Spiegelkabinett'
+    show = performance().replace('Lucia &amp; friends', title)
+    matinee = performance(124).replace('Lucia &amp; friends', 'Einführungsmatinee: ' + title)
+    page = show + matinee + performance(125)
+    responses.get(PROGRAMME_URL, body=page + '<a href="/spielplan/kalender/2099-11/">Nov</a>')
+    responses.get(PROGRAMME_URL + 'kalender/2099-11/', body=page)
+    assert [event.event_id for event in discover_events(title=title)] == [123]
+    with pytest.raises(DiscoveryError, match='No future ticketed performances found for'):
+        discover_events(title='Missing production')

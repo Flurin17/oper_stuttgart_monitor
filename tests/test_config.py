@@ -80,3 +80,13 @@ def test_wildcard_rule(tmp_path):
 def test_discovery_requires_boolean(tmp_path):
     with pytest.raises(ConfigError, match='must be a boolean'):
         load_config(write(tmp_path, 'discover_all_events: all\n' + VALID))
+
+
+def test_exact_discovery_title(tmp_path):
+    cfg = load_config(write(tmp_path, 'discover_all_events: true\ndiscovery_title: "Die drei ??? und das Spiegelkabinett"\nrules:\n  - key: pair\n'))
+    assert cfg.discovery_title == 'Die drei ??? und das Spiegelkabinett'
+
+
+def test_title_requires_discovery(tmp_path):
+    with pytest.raises(ConfigError, match='requires discover_all_events'):
+        load_config(write(tmp_path, 'discovery_title: "Die drei ???"\n' + VALID))

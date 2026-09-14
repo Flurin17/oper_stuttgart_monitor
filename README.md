@@ -35,10 +35,11 @@ uv run oper-monitor --config config.yaml
 
 ## Configuration
 
-`config.example.yaml` enables automatic discovery of all future ticketed performances listed in the Staatsoper Stuttgart programme, across every published season month. The programme is refreshed hourly, so newly listed performances are included automatically. Each performance retains independent alert state. Discovery failures retain the previous list and count toward the operational failure alert.
+`config.example.yaml` enables automatic discovery of all future ticketed performances of **Die drei ??? und das Spiegelkabinett**, across every published season month. The exact production-title filter excludes introductory matinees and other productions. Remove `discovery_title` to discover the whole Staatsoper programme. The programme is refreshed hourly, so newly listed performances are included automatically. Each performance retains independent alert state. Discovery failures retain the previous list and count toward the operational failure alert.
 
 ```yaml
 discover_all_events: true
+discovery_title: "Die drei ??? und das Spiegelkabinett"
 events: []
 rules:
   - key: adjacent-pair

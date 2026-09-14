@@ -117,7 +117,7 @@ def test_discovery_refresh_failure_keeps_checking_and_recovers(monkeypatch):
     discoveries = [(first,), RuntimeError('offline'), (first, second)]
     calls = []
 
-    def discover(timeout):
+    def discover(timeout, title):
         calls.append(timeout)
         result = discoveries.pop(0)
         if isinstance(result, Exception):
